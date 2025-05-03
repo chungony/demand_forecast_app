@@ -154,9 +154,14 @@ def prepare_new_entry(
 def load_logs():
     try:
         df = pd.read_csv(LOG_FILE)
-        df["prediction_for_date"] = pd.to_datetime(df["prediction_for_date"]).dt.date
+        if "prediction_for_date" in df.columns:
+            df["prediction_for_date"] = pd.to_datetime(
+                df["prediction_for_date"], errors="coerce"
+            ).dt.date
+            df = df.dropna(subset=["prediction_for_date"])
         return df
-    except FileNotFoundError:
+    except Exception as e:
+        st.error(f"Failed to load logs: {e}")
         return pd.DataFrame()
 
 
