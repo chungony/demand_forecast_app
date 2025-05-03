@@ -154,7 +154,12 @@ def prepare_new_entry(
 def load_logs():
     try:
         df = pd.read_csv(LOG_FILE)
-        df["prediction_for_date"] = pd.to_datetime(df["prediction_for_date"]).dt.date
+        df["prediction_for_date"] = pd.to_datetime(
+            df["prediction_for_date"],
+            format="mixed",
+            dayfirst=True,
+            errors="coerce",  # Optional: set to 'raise' if you want to see bad formats
+        ).dt.strftime("%Y-%m-%d")
         return df
     except FileNotFoundError:
         return pd.DataFrame()
@@ -235,6 +240,7 @@ if submitted:
         model, forecast_date_str, is_holiday_bw, temperature, rainfall, condition
     )
 
+    logs["prediction_for_date"] = pd.to_datetime(logs["prediction_for_date"]).dt.date
     matched = logs[logs["prediction_for_date"] == actual_date]
     if not matched.empty:
         if pd.isna(matched.iloc[0].get("ActualDemand")) or overwrite_confirm:
