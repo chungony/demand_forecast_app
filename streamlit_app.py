@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import os
 from train_demand_model import retrain as run_training_logic
 import plotly.graph_objects as go
+import base64
+import requests
 
 MODEL_FILE = "rf_demand_model.pkl"
 LOG_FILE = "demand_prediction_log.csv"
@@ -202,6 +204,38 @@ def get_sorted_logs_by_date(
     return logs.dropna(subset=[date_col]).sort_values(date_col)
 
 
+# Upload logs to GitHub via API
+def upload_to_github(df, filename="demand_prediction_log.csv"):
+    token = st.secrets["github_token"]
+    username = "chungony"  # GitHub username
+    repo = "demand_forecast_log"  # repo name
+    path = f"logs/{filename}"
+    branch = "main"
+
+    url = f"https://api.github.com/repos/{username}/{repo}/contents/{path}"
+    headers = {"Authorization": f"token {token}"}
+
+    # Get current file SHA (needed for updates)
+    response = requests.get(url, headers=headers)
+    sha = response.json().get("sha") if response.status_code == 200 else None
+
+    # Prepare file content
+    content = base64.b64encode(df.to_csv(index=False).encode()).decode()
+    data = {
+        "message": "Update demand prediction log",
+        "content": content,
+        "branch": branch,
+    }
+    if sha:
+        data["sha"] = sha
+
+    put_response = requests.put(url, headers=headers, json=data)
+    if put_response.status_code in [200, 201]:
+        st.success("✅ Log file automatically pushed to GitHub!")
+    else:
+        st.error(f"❌ GitHub upload failed: {put_response.json()}")
+
+
 # --- Streamlit UI ---
 st.set_page_config(page_title="7-Day Demand Forecast (DE-BW)", layout="centered")
 logs = load_logs()
@@ -341,3 +375,8 @@ if not logs.empty and "PredictedDemand" in logs.columns:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+# Auto-upload logs at the end
+if not logs.empty:
+    upload_to_github(logs)
