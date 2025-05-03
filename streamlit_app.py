@@ -7,7 +7,32 @@ import os
 from train_demand_model import retrain as run_training_logic
 import plotly.graph_objects as go
 import base64
-import requests
+# import requests
+
+
+# --- Password protection ---
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == st.secrets["app_password"]:
+            st.session_state["authenticated"] = True
+        else:
+            st.session_state["authenticated"] = False
+
+    if "authenticated" not in st.session_state:
+        st.text_input(
+            "🔒 Enter password / Passwort eingeben",
+            type="password",
+            on_change=password_entered,
+            key="password",
+        )
+        st.stop()
+    elif not st.session_state["authenticated"]:
+        st.error("❌ Incorrect password / Falsches Passwort")
+        st.stop()
+
+
+check_password()
+
 
 MODEL_FILE = "rf_demand_model.pkl"
 LOG_FILE = "demand_prediction_log.csv"
