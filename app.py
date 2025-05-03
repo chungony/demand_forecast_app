@@ -145,7 +145,7 @@ def prepare_new_entry(
                 "prediction_for_date": forecast_date_str,
                 **features,
                 "PredictedDemand": prediction,
-                "timestamp": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": pd.Timestamp.now().strftime("%d.%m.%Y %H:%M:%S"),
             }
         ]
     )
@@ -154,14 +154,11 @@ def prepare_new_entry(
 def load_logs():
     try:
         df = pd.read_csv(LOG_FILE)
-        if "prediction_for_date" in df.columns:
-            df["prediction_for_date"] = pd.to_datetime(
-                df["prediction_for_date"], errors="coerce"
-            ).dt.date
-            df = df.dropna(subset=["prediction_for_date"])
+        df["prediction_for_date"] = pd.to_datetime(
+            df["prediction_for_date"], format="%d.%m.%Y"
+        ).dt.date
         return df
-    except Exception as e:
-        st.error(f"Failed to load logs: {e}")
+    except FileNotFoundError:
         return pd.DataFrame()
 
 
@@ -231,7 +228,7 @@ if submitted:
 
     model = load_model()
     forecast_date = actual_date + timedelta(days=7)
-    forecast_date_str = forecast_date.strftime("%Y-%m-%d")
+    forecast_date_str = forecast_date.strftime("%d.%m.%Y")
 
     is_holiday_bw = is_holiday_in_bw(forecast_date_str)
     temperature, rainfall, condition = fetch_weather(forecast_date_str)
