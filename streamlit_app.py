@@ -4,7 +4,7 @@ import joblib
 import requests
 from datetime import datetime, timedelta
 import os
-import subprocess
+from train_demand_model import retrain as run_training_logic
 import plotly.graph_objects as go
 
 MODEL_FILE = "rf_demand_model.pkl"
@@ -183,15 +183,11 @@ def should_retrain(logs):
 def retrain_model():
     st.info(_["retraining_info"])
     try:
-        result = subprocess.run(
-            ["python", "train_demand_model.py"], capture_output=True, text=True
-        )
-        if result.returncode == 0:
+        success, msg = run_training_logic()
+        if success:
             st.success(_["retraining_success"])
-            st.text(result.stdout)
         else:
-            st.error(_["retraining_fail"])
-            st.text(result.stderr)
+            st.warning(msg)
     except Exception as e:
         st.error(_["retraining_error"].format(e))
 

@@ -72,41 +72,28 @@ def train_model(X, y):
     )
 
     avg_rmse = -scores.mean()
-    print(f"Nested CV RMSE scores: {-scores}")
-    print(f"Average RMSE: {avg_rmse:.2f}")
-
     grid_search.fit(X, y)
     joblib.dump(grid_search.best_estimator_, MODEL_FILE)
-    print("✅ Model retrained and saved to rf_demand_model.pkl")
 
     return avg_rmse, scores
 
 
-def main():
+def retrain():
     df = load_verified_data()
     current_count = len(df)
     last_retrain_count = get_last_retrain_count()
 
     new_entries = current_count - last_retrain_count
-    print(
-        f"Entries since last retrain: {new_entries} (current: {current_count}, last: {last_retrain_count})"
-    )
-
     if new_entries >= RETRAIN_THRESHOLD:
-        print(f"🔁 Retraining on {new_entries} new entries...")
-
         X = df[["Holiday", "Temperature", "Rainfall", "Condition"]]
         y = df["ActualDemand"]
 
         avg_rmse, scores = train_model(X, y)
         save_retrain_marker(current_count)
         log_metrics(current_count, avg_rmse, scores)
-        print("📈 Metrics logged to retrain_metrics_log.csv")
+        return True, f"Retrained on {new_entries} entries. Avg RMSE: {avg_rmse:.2f}"
     else:
-        print(
-            f"ℹ️ Only {new_entries} new verified entries. Need {RETRAIN_THRESHOLD} to retrain."
+        return (
+            False,
+            f"Only {new_entries} new entries. Threshold is {RETRAIN_THRESHOLD}.",
         )
-
-
-if __name__ == "__main__":
-    main()
