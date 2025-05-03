@@ -157,7 +157,7 @@ def load_logs():
         df["prediction_for_date"] = pd.to_datetime(
             df["prediction_for_date"], format="mixed", dayfirst=True
         )
-        return df.dropna(subset=["prediction_for_date"])
+        return df
     except FileNotFoundError:
         return pd.DataFrame()
 
