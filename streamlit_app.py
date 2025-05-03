@@ -11,7 +11,7 @@ MODEL_FILE = "rf_demand_model.pkl"
 LOG_FILE = "demand_prediction_log.csv"
 RETRAIN_MARKER_FILE = "last_retrain_marker.txt"
 RETRAIN_THRESHOLD = 5
-api_key = "H9T4DCAATLPQ5MT7XW9NRXGY8"  # API key for Visual Crossing
+api_key = st.secrets["api_key"]
 
 translations = {
     "en": {
