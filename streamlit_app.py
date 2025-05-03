@@ -49,7 +49,7 @@ translations = {
         "condition_overcast": "Overcast",
         "yes": "Yes",
         "no": "No",
-        "date_format": "%b %d, %Y",
+        "date_format": "%Y-%m-%d",
     },
     "de": {
         "title": "📦 Nachfrageprognose für die kommende Woche (Step)",
