@@ -155,9 +155,9 @@ def load_logs():
     try:
         df = pd.read_csv(LOG_FILE)
         df["prediction_for_date"] = pd.to_datetime(
-            df["prediction_for_date"], format="%d.%m.%Y"
+            df["prediction_for_date"], format="%d.%m.%Y", errors="coerce"
         ).dt.date
-        return df
+        return df.dropna(subset=["prediction_for_date"])
     except FileNotFoundError:
         return pd.DataFrame()
 
