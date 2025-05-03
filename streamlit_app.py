@@ -335,7 +335,7 @@ if not logs.empty and "PredictedDemand" in logs.columns:
             tickmode="linear",
             tick0=logs_recent["prediction_for_date"].min(),
             dtick=7 * 24 * 60 * 60 * 1000,  # 1 week in milliseconds
-            tickformat="%d.%m.",
+            tickformat=_["date_format"],
         ),
         hovermode="x unified",
     )
