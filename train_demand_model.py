@@ -97,3 +97,7 @@ def retrain():
             False,
             f"Only {new_entries} new entries. Threshold is {RETRAIN_THRESHOLD}.",
         )
+
+
+if __name__ == "__main__":
+    retrain()
