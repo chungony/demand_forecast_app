@@ -28,7 +28,7 @@ streamlit run streamlit_app.py
 1. Upload this project to a GitHub repository.
 2. Go to [streamlit.io/cloud](https://streamlit.io/cloud).
 3. Click “New app”.
-4. Choose your repo and set `app.py` as the entry point.
+4. Choose your repo and set `streamlit_app.py` as the entry point.
 5. (Optional) Include `setup.sh` to set server configs.
 
 ---
@@ -37,7 +37,7 @@ streamlit run streamlit_app.py
 
 | File                  | Purpose                              |
 |-----------------------|--------------------------------------|
-| `app.py`              | Main app logic                       |
+| `streamlit_app.py`    | Main app logic                       |
 | `train_demand_model.py` | Model training script               |
 | `rf_demand_model.pkl` | Pre-trained model                    |
 | `demand_prediction_log.csv` | Log of past predictions and actuals |
