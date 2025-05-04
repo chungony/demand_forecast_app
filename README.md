@@ -18,7 +18,7 @@ This Streamlit app predicts product demand for the upcoming week using weather a
 git clone https://github.com/yourusername/demand-forecast-app.git
 cd demand-forecast-app
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run streamlit_app.py
 ```
 
 ---
