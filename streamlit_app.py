@@ -213,7 +213,7 @@ LOG_FILE = fetch_from_github(GITHUB_PATH, filename=LOG_FILE_NAME)
 
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="7-Day Demand Forecast (DE-BW)", layout="centered")
+st.set_page_config(page_title="Demand Forecast / Nachfrageprognose", layout="centered")
 logs = load_logs()
 
 lang = st.selectbox("🌐 Language / Sprache", options=["en", "de"], index=1)
