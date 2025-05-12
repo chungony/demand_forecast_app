@@ -62,6 +62,7 @@ streamlit run streamlit_app.py
 |-----------------------|--------------------------------------|
 | `streamlit_app.py`    | Main app logic                       |
 | `train_demand_model.py` | Model training script               |
+| `translations.py`     | UI translations                      |
 | `rf_demand_model.pkl` | Pre-trained model                    |
 | `demand_prediction_log.csv` | Log of past predictions and actuals |
 | `requirements.txt`    | Python dependencies                  |
