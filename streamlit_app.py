@@ -214,7 +214,6 @@ LOG_FILE = fetch_from_github(GITHUB_PATH, filename=LOG_FILE_NAME)
 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Demand Forecast / Nachfrageprognose", layout="centered")
-logs = load_logs()
 
 lang = st.selectbox("🌐 Language / Sprache", options=["en", "de"], index=1)
 _ = translations[lang]
@@ -229,6 +228,7 @@ with st.form("forecast_form"):
     overwrite_confirm = st.checkbox(_["overwrite"])
     submitted = st.form_submit_button(_["submit"])
 
+logs = load_logs()
 
 if submitted:
     if actual_date.weekday() != 3:
