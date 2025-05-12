@@ -4,10 +4,11 @@ import joblib
 import requests
 from datetime import datetime, timedelta
 import os
-from train_demand_model import retrain as run_training_logic
 import plotly.graph_objects as go
 import base64
-# import requests
+import hashlib
+from train_demand_model import retrain as run_training_logic
+from translations import translations
 
 
 # --- Password protection ---
@@ -34,88 +35,68 @@ def check_password():
 check_password()
 
 
+# --- Parameters ---
 MODEL_FILE = "rf_demand_model.pkl"
-LOG_FILE = "demand_prediction_log.csv"
+LOG_FILE_NAME = "demand_prediction_log.csv"
 RETRAIN_MARKER_FILE = "last_retrain_marker.txt"
 RETRAIN_THRESHOLD = 5
-api_key = st.secrets["api_key"]
+VC_API_KEY = st.secrets["api_key"]
+GITHUB_TOKEN = st.secrets["github_token"]
+GITHUB_USERNAME = st.secrets["github_username"]
+GITHUB_REPO = "demand_forecast_log"
+GITHUB_BRANCH = "main"
 
-translations = {
-    "en": {
-        "title": "📦 Demand Forecast for the Coming Week (Step)",
-        "select_date": "Select a Thursday",
-        "actual_demand": "Actual Demand for selected date",
-        "overwrite": "✅ Overwrite existing actual demand if it exists?",
-        "submit": "Submit and Predict",
-        "not_thursday": "⚠️ Please select a Thursday.",
-        "actual_recorded": "✅ Actual demand recorded. Forecast error: {:.0f} units.",
-        "entry_exists": "⚠️ Entry already exists for this date. Check the box to overwrite actual demand.",
-        "no_forecast": "ℹ️ No forecast to match this actual demand yet.",
-        "forecasted_demand": "📈 Forecasted demand for {}: {:.0f}",
-        "already_exists": "⚠️ Forecast for {} already exists. Forecasted demand: {:.0f}",
-        "retraining_info": "🔁 Retraining threshold reached. Calling training script...",
-        "retraining_success": "✅ Model retrained successfully.",
-        "retraining_fail": "❌ Retraining script failed.",
-        "retraining_error": "⚠️ Could not run training script: {}",
-        "retraining_remaining": "🔄 {} more entries with actual demand before the model is retrained.",
-        "retraining_reached": "✅ Retraining threshold reached. Model will be updated after this submission.",
-        "trend_chart_title": "Demand Prediction Trend",
-        "label_predicted": "Predicted Demand",
-        "label_actual": "Actual Demand",
-        "label_date": "Date",
-        "label_demand": "Demand",
-        "forecast_context_title": "🌤️ Forecast Context",
-        "forecast_date_label": "📅 Date",
-        "forecast_holiday_label": "🏖️ Public Holiday in BW",
-        "forecast_temp_label": "🌡️ Temperature",
-        "forecast_rain_label": "🌧️ Precipitation",
-        "forecast_cond_label": "☁️ Weather Condition",
-        "condition_clear": "Clear",
-        "condition_rain": "Rain",
-        "condition_partially_cloudy": "Partially cloudy",
-        "condition_overcast": "Overcast",
-        "yes": "Yes",
-        "no": "No",
-        "date_format": "%Y-%m-%d",
-    },
-    "de": {
-        "title": "📦 Nachfrageprognose für die kommende Woche (Step)",
-        "select_date": "Wähle einen Donnerstag",
-        "actual_demand": "Tatsächliche Nachfrage für das ausgewählte Datum",
-        "overwrite": "✅ Vorhandene tatsächliche Nachfrage überschreiben?",
-        "submit": "Absenden und Prognostizieren",
-        "not_thursday": "⚠️ Bitte wählen Sie einen Donnerstag.",
-        "actual_recorded": "✅ Tatsächliche Nachfrage erfasst. Prognosefehler: {:.0f} Einheiten.",
-        "entry_exists": "⚠️ Eintrag für dieses Datum existiert bereits. Aktivieren Sie das Kontrollkästchen, um zu überschreiben.",
-        "no_forecast": "ℹ️ Keine Prognose vorhanden, um dieser Nachfrage zu entsprechen.",
-        "forecasted_demand": "📈 Prognostizierte Nachfrage für {}: {:.0f}",
-        "already_exists": "⚠️ Prognose für {} existiert bereits. Prognostizierte Nachfrage: {:.0f}",
-        "retraining_info": "🔁 Schwelle für erneutes Training erreicht. Trainingsskript wird aufgerufen...",
-        "retraining_success": "✅ Modell erfolgreich neu trainiert.",
-        "retraining_fail": "❌ Trainingsskript fehlgeschlagen.",
-        "retraining_error": "⚠️ Trainingsskript konnte nicht ausgeführt werden: {}",
-        "retraining_remaining": "🔄 Noch {} Einträge mit tatsächlicher Nachfrage, bevor das Modell neu trainiert wird.",
-        "retraining_reached": "✅ Schwelle für erneutes Training erreicht. Das Modell wird nach dieser Eingabe aktualisiert.",
-        "trend_chart_title": "Prognosetrend der Nachfrage",
-        "label_predicted": "Prognostizierte Nachfrage",
-        "label_actual": "Tatsächliche Nachfrage",
-        "label_date": "Datum",
-        "label_demand": "Nachfrage",
-        "forecast_context_title": "🌤️ Prognosekontext",
-        "forecast_date_label": "📅 Datum",
-        "forecast_holiday_label": "🏖️ Feiertag in BW",
-        "forecast_temp_label": "🌡️ Temperatur",
-        "forecast_rain_label": "🌧️ Niederschlag",
-        "forecast_cond_label": "☁️ Wetterzustand",
-        "condition_clear": "Klar",
-        "condition_rain": "Regen",
-        "condition_partially_cloudy": "Teilweise bewölkt",
-        "condition_overcast": "Bedeckt",
-        "yes": "Ja",
-        "no": "Nein",
-        "date_format": "%d.%m.%Y",
-    },
-}
+
+# --- Functions ---
+def fetch_from_github(
+    path, repo=GITHUB_REPO, branch=GITHUB_BRANCH, filename=LOG_FILE_NAME
+):
+    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{repo}/contents/{path}?ref={branch}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        content = base64.b64decode(response.json()["content"])
+        with open(filename, "wb") as f:
+            f.write(content)
+        return filename
+    else:
+        st.error("❌ Failed to fetch log file from GitHub")
+        st.stop()
+
+
+def upload_to_github(df, path, repo=GITHUB_REPO, branch=GITHUB_BRANCH):
+    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{repo}/contents/{path}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    new_content = df.to_csv(index=False)
+    new_hash = hashlib.sha256(new_content.encode()).hexdigest()
+
+    # Get current file content and compare hash
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        current_content = base64.b64decode(response.json()["content"]).decode()
+        current_hash = hashlib.sha256(current_content.encode()).hexdigest()
+        if current_hash == new_hash:
+            return  # No change, skip upload
+        sha = response.json().get("sha")
+    else:
+        sha = None
+
+    encoded_content = base64.b64encode(new_content.encode()).decode()
+    data = {
+        "message": "Update demand prediction log",
+        "content": encoded_content,
+        "branch": branch,
+    }
+    if sha:
+        data["sha"] = sha
+
+    put_response = requests.put(url, headers=headers, json=data)
+    if put_response.status_code in [200, 201]:
+        st.success("✅ Log file automatically pushed to GitHub!")
+    else:
+        st.error(f"❌ GitHub upload failed: {put_response.json()}")
 
 
 def load_model():
@@ -142,7 +123,7 @@ def is_holiday_in_bw(date_str):
 
 def fetch_weather(date_str):
     try:
-        url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Stuttgart,DE/{date_str}?unitGroup=metric&key={api_key}&include=days"
+        url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Stuttgart,DE/{date_str}?unitGroup=metric&key={VC_API_KEY}&include=days"
         response = requests.get(url)
         day = response.json().get("days", [{}])[0]
         return (
@@ -182,10 +163,7 @@ def load_logs():
     try:
         df = pd.read_csv(LOG_FILE)
         df["prediction_for_date"] = pd.to_datetime(
-            df["prediction_for_date"],
-            format="mixed",
-            dayfirst=True,
-            errors="coerce",  # Optional: set to 'raise' if you want to see bad formats
+            df["prediction_for_date"], errors="coerce", dayfirst=True, format="mixed"
         ).dt.strftime("%Y-%m-%d")
         return df
     except FileNotFoundError:
@@ -229,36 +207,9 @@ def get_sorted_logs_by_date(
     return logs.dropna(subset=[date_col]).sort_values(date_col)
 
 
-# Upload logs to GitHub via API
-def upload_to_github(df, filename="demand_prediction_log.csv"):
-    token = st.secrets["github_token"]
-    username = "chungony"  # GitHub username
-    repo = "demand_forecast_log"  # repo name
-    path = f"logs/{filename}"
-    branch = "main"
-
-    url = f"https://api.github.com/repos/{username}/{repo}/contents/{path}"
-    headers = {"Authorization": f"token {token}"}
-
-    # Get current file SHA (needed for updates)
-    response = requests.get(url, headers=headers)
-    sha = response.json().get("sha") if response.status_code == 200 else None
-
-    # Prepare file content
-    content = base64.b64encode(df.to_csv(index=False).encode()).decode()
-    data = {
-        "message": "Update demand prediction log",
-        "content": content,
-        "branch": branch,
-    }
-    if sha:
-        data["sha"] = sha
-
-    put_response = requests.put(url, headers=headers, json=data)
-    if put_response.status_code in [200, 201]:
-        st.success("✅ Log file automatically pushed to GitHub!")
-    else:
-        st.error(f"❌ GitHub upload failed: {put_response.json()}")
+# --- Fetch logs from GitHub---
+GITHUB_PATH = f"logs/{LOG_FILE_NAME}"
+LOG_FILE = fetch_from_github(GITHUB_PATH, filename=LOG_FILE_NAME)
 
 
 # --- Streamlit UI ---
@@ -354,7 +305,7 @@ if should_retrain(logs):
     retrain_model()
 
 
-# Show last 12 weeks of predictions based on the most recent prediction date
+# --- Show last 12 weeks of predictions based on the most recent prediction date ---
 if not logs.empty and "PredictedDemand" in logs.columns:
     logs_sorted = get_sorted_logs_by_date(logs)
     last_date = logs_sorted["prediction_for_date"].max()
@@ -402,6 +353,6 @@ if not logs.empty and "PredictedDemand" in logs.columns:
     st.plotly_chart(fig, use_container_width=True)
 
 
-# Auto-upload logs at the end
+# --- Auto-upload logs at the end ---
 if not logs.empty:
-    upload_to_github(logs)
+    upload_to_github(logs, GITHUB_PATH)
