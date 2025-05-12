@@ -58,15 +58,15 @@ streamlit run streamlit_app.py
 
 ## 📁 File Overview
 
-| File                  | Purpose                              |
-|-----------------------|--------------------------------------|
-| `streamlit_app.py`    | Main app logic                       |
-| `train_demand_model.py` | Model training script               |
-| `translations.py`     | UI translations                      |
-| `rf_demand_model.pkl` | Pre-trained model                    |
+| File                    | Purpose                              |
+|-------------------------|--------------------------------------|
+| `streamlit_app.py`      | Main app logic                       |
+| `train_demand_model.py` | Model training script                |
+| `translations.py`       | User interface translations          |
+| `rf_demand_model.pkl`   | Pre-trained model                    |
 | `demand_prediction_log.csv` | Log of past predictions and actuals |
-| `requirements.txt`    | Python dependencies                  |
-| `setup.sh`            | Streamlit Cloud config (optional)    |
+| `requirements.txt`      | Python dependencies                  |
+| `setup.sh`              | Streamlit Cloud config (optional)    |
 
 ---
 
