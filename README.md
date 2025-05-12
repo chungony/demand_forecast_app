@@ -12,6 +12,29 @@ This Streamlit app predicts product demand for the upcoming week using weather a
 
 ---
 
+## 🧠 Model Overview
+
+This app uses a **Random Forest Regressor** from scikit-learn, implemented with the following setup:
+
+### 🔧 Preprocessing
+- `StandardScaler` is applied before training.
+
+### 🔍 Hyperparameter Tuning
+- GridSearchCV is used to optimize:
+  - `n_estimators`: [100, 200]
+  - `max_depth`: [None, 10, 20]
+  - `min_samples_split`: [2, 5]
+
+### 🔄 Cross-validation
+- **Nested cross-validation** strategy:
+  - Inner CV: `KFold(n_splits=3, shuffle=True, random_state=42)`
+  - Outer CV: `KFold(n_splits=5, shuffle=True, random_state=42)`
+
+### 📈 Scoring
+- Model performance is evaluated using **negative root mean squared error** (`neg_root_mean_squared_error`).
+
+---
+
 ## 📦 How to Run Locally
 
 ```bash
