@@ -348,6 +348,7 @@ if not logs.empty and "PredictedDemand" in logs.columns:
             tickformat=_["date_format"],
         ),
         hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
     st.plotly_chart(fig, use_container_width=True)
