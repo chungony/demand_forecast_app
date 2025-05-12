@@ -1,6 +1,6 @@
 # 📦 Demand Forecast App
 
-This Streamlit app predicts product demand for the upcoming week using weather and holiday data in Baden-Württemberg (Germany).
+This Streamlit app predicts product demand for the upcoming week using weather and holiday data.
 
 ## 🚀 Features
 
