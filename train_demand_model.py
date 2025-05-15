@@ -11,7 +11,6 @@ LOG_FILE = "demand_prediction_log.csv"
 MODEL_FILE = "rf_demand_model.pkl"
 RETRAIN_MARKER_FILE = "last_retrain_marker.txt"
 METRIC_LOG_FILE = "retrain_metrics_log.csv"
-RETRAIN_THRESHOLD = 5
 
 
 def load_verified_data():
@@ -84,19 +83,13 @@ def retrain():
     last_retrain_count = get_last_retrain_count()
 
     new_entries = current_count - last_retrain_count
-    if new_entries >= RETRAIN_THRESHOLD:
-        X = df[["Holiday", "Temperature", "Rainfall", "Condition"]]
-        y = df["ActualDemand"]
+    X = df[["Holiday", "Temperature", "Rainfall", "Condition"]]
+    y = df["ActualDemand"]
 
-        avg_rmse, scores = train_model(X, y)
-        save_retrain_marker(current_count)
-        log_metrics(current_count, avg_rmse, scores)
-        return True, f"Retrained on {new_entries} entries. Avg RMSE: {avg_rmse:.2f}"
-    else:
-        return (
-            False,
-            f"Only {new_entries} new entries. Threshold is {RETRAIN_THRESHOLD}.",
-        )
+    avg_rmse, scores = train_model(X, y)
+    save_retrain_marker(current_count)
+    log_metrics(current_count, avg_rmse, scores)
+    return True, f"Retrained on {new_entries} entries. Avg RMSE: {avg_rmse:.2f}"
 
 
 if __name__ == "__main__":
