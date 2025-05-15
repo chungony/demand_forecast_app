@@ -1,13 +1,15 @@
-import streamlit as st
-import pandas as pd
-import joblib
-import requests
-from datetime import datetime, timedelta
-import os
-import plotly.graph_objects as go
 import base64
 import hashlib
 import json
+import os
+from datetime import datetime, timedelta
+
+import joblib
+import pandas as pd
+import plotly.graph_objects as go
+import requests
+import streamlit as st
+
 from train_demand_model import retrain as run_training_logic
 from translations import translations
 
