@@ -40,7 +40,7 @@ check_password()
 MODEL_FILE = "rf_demand_model.pkl"
 LOG_FILE_NAME = "demand_prediction_log.csv"
 RETRAIN_MARKER_FILE = "last_retrain_marker.txt"
-RETRAIN_THRESHOLD = 5
+RETRAIN_THRESHOLD = 24
 VC_API_KEY = st.secrets["api_key"]
 GITHUB_TOKEN = st.secrets["github_token"]
 GITHUB_USERNAME = st.secrets["github_username"]
@@ -302,8 +302,8 @@ if submitted:
         st.info(_["retraining_reached"])
 
 
-if should_retrain(logs):
-    retrain_model()
+# if should_retrain(logs):
+#    retrain_model()
 
 
 # --- Show last 12 weeks of predictions based on the most recent prediction date ---
