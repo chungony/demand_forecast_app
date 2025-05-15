@@ -7,6 +7,7 @@ import os
 import plotly.graph_objects as go
 import base64
 import hashlib
+import json
 from train_demand_model import retrain as run_training_logic
 from translations import translations
 
@@ -117,7 +118,7 @@ def is_holiday_in_bw(date_str):
             h["date"] == date_str and (not h["counties"] or "DE-BW" in h["counties"])
             for h in holidays
         )
-    except:
+    except (requests.RequestException, ValueError, KeyError, json.JSONDecodeError):
         return False
 
 
@@ -131,7 +132,7 @@ def fetch_weather(date_str):
             day.get("precip", 1.0),
             day.get("conditions", "Clear"),
         )
-    except:
+    except (requests.RequestException, ValueError, KeyError, json.JSONDecodeError):
         return 22.0, 1.0, "Clear"
 
 
@@ -251,8 +252,8 @@ if submitted:
     if not matched.empty:
         if pd.isna(matched.iloc[0].get("ActualDemand")) or overwrite_confirm:
             logs.loc[matched.index[0], "ActualDemand"] = actual_demand
-            forecasted = logs.loc[matched.index[0], "PredictedDemand"]
-            error = forecasted - actual_demand
+            forecasted = float(logs.at[matched.index[0], "PredictedDemand"])
+            error = forecasted - float(actual_demand)
             st.success(_["actual_recorded"].format(error))
         else:
             st.warning(_["entry_exists"])
